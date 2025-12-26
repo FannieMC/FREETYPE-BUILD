@@ -1,7 +1,5 @@
-name: Build FreeType Android
+name: Build FreeType Android (32-bit)
 
-# 这里改成了 push，意思是：只要有代码推送到仓库，就自动触发
-# workflow_dispatch 依然保留，这样你也可以手动点按钮触发
 on: 
   push:
   workflow_dispatch:
@@ -29,12 +27,10 @@ jobs:
       run: |
         mkdir build
         cd build
-        # 使用 NDK 的 toolchain 文件
-        # 强制静态链接 STL (c++_static) 并关闭所有依赖
         cmake \
           -G "Ninja" \
           -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake \
-          -DANDROID_ABI=arm64-v8a \
+          -DANDROID_ABI=armeabi-v7a \
           -DANDROID_PLATFORM=android-24 \
           -DANDROID_STL=c++_static \
           -DCMAKE_BUILD_TYPE=Release \
@@ -53,5 +49,6 @@ jobs:
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: libfreetype_android_arm64
+        # 改个名字方便区分
+        name: libfreetype_android_arm32
         path: build/libfreetype.a
