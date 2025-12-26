@@ -1,0 +1,50 @@
+name: Build FreeType Android
+
+on:
+  workflow_dispatch: # 允许手动点击按钮触发
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Setup Android NDK r23c
+      uses: android-actions/setup-ndk@v3
+      with:
+        ndk-version: r23c
+        
+    - name: Download & Extract FreeType 2.13.3
+      run: |
+        wget https://download.savannah.gnu.org/releases/freetype/freetype-2.13.3.tar.gz
+        tar -xvf freetype-2.14.1.tar.gz
+        mv freetype-2.14.1 freetype-src
+        
+    - name: Configure CMake
+      run: |
+        mkdir build
+        cd build
+        # 使用 NDK 的 toolchain 文件
+        # 注意：这里我们禁用了 zlib, png 等所有依赖，只编译纯净的 freetype
+        cmake \
+          -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake \
+          -DANDROID_ABI=arm64-v8a \
+          -DANDROID_PLATFORM=android-24 \
+          -DANDROID_STL=c++_static \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DFT_DISABLE_ZLIB=ON \
+          -DFT_DISABLE_BZIP2=ON \
+          -DFT_DISABLE_PNG=ON \
+          -DFT_DISABLE_HARFBUZZ=ON \
+          -DFT_DISABLE_BROTLI=ON \
+          ../freetype-src
+
+    - name: Build
+      run: |
+        cd build
+        make -j4
+        
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: libfreetype_android_arm64
+        path: build/libfreetype.a
