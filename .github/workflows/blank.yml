@@ -1,31 +1,38 @@
 name: Build FreeType Android
 
-on:
-  workflow_dispatch: # 允许手动点击按钮触发
+# 这里改成了 push，意思是：只要有代码推送到仓库，就自动触发
+# workflow_dispatch 依然保留，这样你也可以手动点按钮触发
+on: 
+  push:
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     
     steps:
+    - name: Install Ninja & CMake
+      run: sudo apt-get install -y ninja-build cmake
+
     - name: Setup Android NDK r23c
-      uses: android-actions/setup-ndk@v3
+      uses: nttld/setup-ndk@v1
       with:
         ndk-version: r23c
         
     - name: Download & Extract FreeType 2.13.3
       run: |
         wget https://download.savannah.gnu.org/releases/freetype/freetype-2.13.3.tar.gz
-        tar -xvf freetype-2.14.1.tar.gz
-        mv freetype-2.14.1 freetype-src
+        tar -xvf freetype-2.13.3.tar.gz
+        mv freetype-2.13.3 freetype-src
         
     - name: Configure CMake
       run: |
         mkdir build
         cd build
         # 使用 NDK 的 toolchain 文件
-        # 注意：这里我们禁用了 zlib, png 等所有依赖，只编译纯净的 freetype
+        # 强制静态链接 STL (c++_static) 并关闭所有依赖
         cmake \
+          -G "Ninja" \
           -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake \
           -DANDROID_ABI=arm64-v8a \
           -DANDROID_PLATFORM=android-24 \
@@ -41,7 +48,7 @@ jobs:
     - name: Build
       run: |
         cd build
-        make -j4
+        ninja
         
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
