@@ -17,9 +17,9 @@ jobs:
       with:
         ndk-version: r23c
         
-    - name: Download & Extract FreeType 2.13.3
+    - name: Download & Extract FreeType 2.14.1
       run: |
-        wget https://download.savannah.gnu.org/releases/freetype/freetype-2.13.3.tar.gz
+        wget https://download.savannah.gnu.org/releases/freetype/freetype-2.14.1.tar.gz
         tar -xvf freetype-2.14.1.tar.gz
         mv freetype-2.14.1 freetype-src
         
